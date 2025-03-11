@@ -27,7 +27,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+    void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _auth.signInWithEmailAndPassword(
@@ -35,8 +35,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
       );
       emit(Authenticated());
+      print('Login successful');
+    } on FirebaseAuthException catch (e) {
+      emit(AuthError(e.message ?? 'Login failed'));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('An unexpected error occurred'));
     }
   }
 

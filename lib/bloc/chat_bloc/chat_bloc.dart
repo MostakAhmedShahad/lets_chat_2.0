@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lets_chat/models/message_model.dart';
+import 'package:lets_chat/models/user_model.dart';
+  
 
 part 'chat_event.dart';
 part 'chat_state.dart';
@@ -13,6 +15,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ChatBloc() : super(ChatInitial()) {
     on<SendMessage>(_onSendMessage);
     on<LoadMessages>(_onLoadMessages);
+    on<SearchUsers>(_onSearchUsers);
   }
 
   void _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
@@ -29,16 +32,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
-    try {
-      final messages = await _firestore
-          .collection('messages')
-          .where('receiverId', isEqualTo: event.receiverId)
-          .orderBy('timestamp', descending: true)
-          .get();
-      emit(ChatLoaded(messages.docs.map((doc) => Message.fromMap(doc.data())).toList()));
-    } catch (e) {
-      emit(ChatError(e.toString()));
-    }
+  emit(ChatLoading());
+  try {
+    final messages = await _firestore
+        .collection('messages')
+        .where('receiverId', isEqualTo: event.receiverId)
+        .orderBy('timestamp', descending: true)
+        .get();
+    emit(ChatLoaded(messages: messages.docs.map((doc) => Message.fromMap(doc.data())).toList())); // Correct usage
+  } catch (e) {
+    emit(ChatError(e.toString()));
   }
+}
+
+ void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
+  emit(ChatLoading());
+  try {
+    final snapshot = await _firestore
+        .collection('users')
+        .where('email', isEqualTo: event.email)
+        .get();
+    final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+    emit(ChatLoaded(users: users)); // Correct usage with named parameters
+  } catch (e) {
+    emit(ChatError(e.toString()));
+  }
+}
 }

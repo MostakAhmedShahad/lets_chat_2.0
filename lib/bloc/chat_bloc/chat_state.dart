@@ -13,12 +13,20 @@ class ChatLoading extends ChatState {}
 
 class ChatLoaded extends ChatState {
   final List<Message> messages;
+  final List<UserModel> users;
 
-  ChatLoaded(this.messages);
+  // Use named parameters
+  const ChatLoaded({this.messages = const [], this.users = const []});
+
+  @override
+  List<Object> get props => [messages, users];
 }
 
 class ChatError extends ChatState {
   final String error;
 
-  ChatError(this.error);
+  const ChatError(this.error);
+
+  @override
+  List<Object> get props => [error];
 }

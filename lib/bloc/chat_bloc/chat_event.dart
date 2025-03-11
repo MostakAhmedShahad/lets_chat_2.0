@@ -11,11 +11,17 @@ class SendMessage extends ChatEvent {
   final String receiverId;
   final String message;
 
-  SendMessage(this.receiverId, this.message);
+  const SendMessage(this.receiverId, this.message);
 }
 
 class LoadMessages extends ChatEvent {
   final String receiverId;
 
-  LoadMessages(this.receiverId);
+  const LoadMessages(this.receiverId);
+}
+
+class SearchUsers extends ChatEvent {
+  final String email;
+
+  const SearchUsers(this.email);
 }
