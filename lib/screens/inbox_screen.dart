@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../bloc/auth_bloc/auth_bloc.dart';
 import '../bloc/chat_bloc/chat_bloc.dart';
 import '../models/user_model.dart';
 import 'chat_screen.dart';
@@ -35,8 +34,11 @@ class InboxScreen extends StatelessWidget {
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
-                if (state is ChatLoaded) {
+                if (state is UsersLoaded) {
                   final users = state.users;
+                  if (users.isEmpty) {
+                    return Center(child: Text('No users found'));
+                  }
                   return ListView.builder(
                     itemCount: users.length,
                     itemBuilder: (context, index) {
@@ -56,8 +58,10 @@ class InboxScreen extends StatelessWidget {
                   );
                 } else if (state is ChatError) {
                   return Center(child: Text(state.error));
-                } else {
+                } else if (state is ChatLoading) {
                   return Center(child: CircularProgressIndicator());
+                } else {
+                  return Center(child: Text('Search for users by email'));
                 }
               },
             ),

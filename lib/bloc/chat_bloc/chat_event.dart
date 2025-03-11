@@ -12,16 +12,25 @@ class SendMessage extends ChatEvent {
   final String message;
 
   const SendMessage(this.receiverId, this.message);
+
+  @override
+  List<Object> get props => [receiverId, message];
 }
 
 class LoadMessages extends ChatEvent {
   final String receiverId;
 
   const LoadMessages(this.receiverId);
+
+  @override
+  List<Object> get props => [receiverId];
 }
 
 class SearchUsers extends ChatEvent {
   final String email;
 
   const SearchUsers(this.email);
+
+  @override
+  List<Object> get props => [email];
 }

@@ -11,6 +11,9 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Fetch messages when the screen is opened
+    context.read<ChatBloc>().add(LoadMessages(receiverId));
+
     return Scaffold(
       appBar: AppBar(title: Text('Chat')),
       body: Column(
@@ -18,15 +21,19 @@ class ChatScreen extends StatelessWidget {
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
-                if (state is ChatLoaded) {
+                if (state is MessagesLoaded) {
+                  final messages = state.messages;
                   return ListView.builder(
-                    reverse: true,
-                    itemCount: state.messages.length,
+                    reverse: true, // Show latest messages at the bottom
+                    itemCount: messages.length,
                     itemBuilder: (context, index) {
-                      final message = state.messages[index];
+                      final message = messages[index];
                       return ListTile(
                         title: Text(message.message),
-                        subtitle: Text(message.timestamp.toString()),
+                        subtitle: Text(
+                          '${message.timestamp.toLocal()}',
+                          style: TextStyle(fontSize: 12),
+                        ),
                       );
                     },
                   );
@@ -51,11 +58,14 @@ class ChatScreen extends StatelessWidget {
                 IconButton(
                   icon: Icon(Icons.send),
                   onPressed: () {
-                    context.read<ChatBloc>().add(SendMessage(
-                          receiverId,
-                          _messageController.text,
-                        ));
-                    _messageController.clear();
+                    final message = _messageController.text.trim();
+                    if (message.isNotEmpty) {
+                      context.read<ChatBloc>().add(SendMessage(
+                            receiverId,
+                            message,
+                          ));
+                      _messageController.clear();
+                    }
                   },
                 ),
               ],

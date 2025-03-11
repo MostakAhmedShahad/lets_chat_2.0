@@ -4,7 +4,6 @@ import 'package:equatable/equatable.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:lets_chat/models/message_model.dart';
 import 'package:lets_chat/models/user_model.dart';
-  
 
 part 'chat_event.dart';
 part 'chat_state.dart';
@@ -27,72 +26,42 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         'timestamp': DateTime.now(),
       });
     } catch (e) {
-      emit(ChatError(e.toString()));
+      emit(ChatError('Failed to send message: $e'));
     }
   }
 
   void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
-  emit(ChatLoading());
-  try {
-    final messages = await _firestore
-        .collection('messages')
-        .where('receiverId', isEqualTo: event.receiverId)
-        .orderBy('timestamp', descending: true)
-        .get();
-    emit(ChatLoaded(messages: messages.docs.map((doc) => Message.fromMap(doc.data())).toList())); // Correct usage
-  } catch (e) {
-    emit(ChatError(e.toString()));
+    emit(ChatLoading());
+    try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+
+      // Fetch messages where the current user is either the sender or receiver
+      final messages = await _firestore
+          .collection('messages')
+          .where('senderId', isEqualTo: currentUserId)
+          .where('receiverId', isEqualTo: event.receiverId)
+          .orderBy('timestamp', descending: true)
+          .get();
+
+      final messageList = messages.docs.map((doc) => Message.fromMap(doc.data())).toList();
+      emit(MessagesLoaded(messages: messageList));
+    } catch (e) {
+      emit(ChatError('Failed to load messages: $e'));
+    }
   }
-}
 
-//  void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
-//   emit(ChatLoading());
-//   try {
-//     final snapshot = await _firestore
-//         .collection('users')
-//         .where('email', isEqualTo: event.email)
-//         .get();
-//     final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
-//     emit(ChatLoaded(users: users)); // Correct usage with named parameters
-//   } catch (e) {
-//     emit(ChatError(e.toString()));
-//   }
-// }
-// void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
-//   emit(ChatLoading());
-//   try {
-//     final snapshot = await FirebaseFirestore.instance
-//         .collection('users')
-//         .where('email', isEqualTo: event.email)
-//         .get();
+  void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
+    emit(ChatLoading());
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .where('email', isEqualTo: event.email)
+          .get();
 
-//     final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
-//     emit(ChatLoaded(users: users));
-//   } catch (e) {
-//     emit(ChatError('Failed to search users: $e'));
-//   }
-// }
-void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
-  emit(ChatLoading());
-  try {
-    print('Searching for email: ${event.email}');
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('email', isEqualTo: event.email)
-        .get();
-
-    print('Search results: ${snapshot.docs.length}');
-    final users = snapshot.docs.map((doc) {
-      print('User data: ${doc.data()}');
-      return UserModel.fromMap(doc.data());
-    }).toList();
-
-    emit(ChatLoaded(users: users));
-  } catch (e) {
-    print('Search error: $e');
-    emit(ChatError('Failed to search users: $e'));
+      final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+      emit(UsersLoaded(users: users));
+    } catch (e) {
+      emit(ChatError('Failed to search users: $e'));
+    }
   }
-}
-
-
 }
