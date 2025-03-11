@@ -1,3 +1,16 @@
+// class UserModel {
+//   final String uid;
+//   final String email;
+
+//   UserModel({required this.uid, required this.email});
+
+//   factory UserModel.fromMap(Map<String, dynamic> data) {
+//     return UserModel(
+//       uid: data['uid'] ?? '', // Ensure null safety
+//       email: data['email'] ?? '', // Ensure null safety
+//     );
+//   }
+// }
 class UserModel {
   final String uid;
   final String email;
@@ -6,8 +19,8 @@ class UserModel {
 
   factory UserModel.fromMap(Map<String, dynamic> data) {
     return UserModel(
-      uid: data['uid'] ?? '', // Ensure null safety
-      email: data['email'] ?? '', // Ensure null safety
+      uid: data['uid'],
+      email: data['email'],
     );
   }
 }

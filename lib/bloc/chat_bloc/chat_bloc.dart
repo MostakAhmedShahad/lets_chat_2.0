@@ -45,17 +45,54 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 }
 
- void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
+//  void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
+//   emit(ChatLoading());
+//   try {
+//     final snapshot = await _firestore
+//         .collection('users')
+//         .where('email', isEqualTo: event.email)
+//         .get();
+//     final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+//     emit(ChatLoaded(users: users)); // Correct usage with named parameters
+//   } catch (e) {
+//     emit(ChatError(e.toString()));
+//   }
+// }
+// void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
+//   emit(ChatLoading());
+//   try {
+//     final snapshot = await FirebaseFirestore.instance
+//         .collection('users')
+//         .where('email', isEqualTo: event.email)
+//         .get();
+
+//     final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+//     emit(ChatLoaded(users: users));
+//   } catch (e) {
+//     emit(ChatError('Failed to search users: $e'));
+//   }
+// }
+void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
   emit(ChatLoading());
   try {
-    final snapshot = await _firestore
+    print('Searching for email: ${event.email}');
+    final snapshot = await FirebaseFirestore.instance
         .collection('users')
         .where('email', isEqualTo: event.email)
         .get();
-    final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
-    emit(ChatLoaded(users: users)); // Correct usage with named parameters
+
+    print('Search results: ${snapshot.docs.length}');
+    final users = snapshot.docs.map((doc) {
+      print('User data: ${doc.data()}');
+      return UserModel.fromMap(doc.data());
+    }).toList();
+
+    emit(ChatLoaded(users: users));
   } catch (e) {
-    emit(ChatError(e.toString()));
+    print('Search error: $e');
+    emit(ChatError('Failed to search users: $e'));
   }
 }
+
+
 }
