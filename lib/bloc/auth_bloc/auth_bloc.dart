@@ -1,0 +1,47 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:equatable/equatable.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+part 'auth_event.dart';
+part 'auth_state.dart';
+
+class AuthBloc extends Bloc<AuthEvent, AuthState> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  AuthBloc() : super(AuthInitial()) {
+    on<SignUpRequested>(_onSignUpRequested);
+    on<LoginRequested>(_onLoginRequested);
+    on<LogoutRequested>(_onLogoutRequested);
+  }
+
+  void _onSignUpRequested(SignUpRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      await _auth.createUserWithEmailAndPassword(
+        email: event.email,
+        password: event.password,
+      );
+      emit(Authenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+    emit(AuthLoading());
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: event.email,
+        password: event.password,
+      );
+      emit(Authenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
+  }
+
+  void _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
+    await _auth.signOut();
+    emit(Unauthenticated());
+  }
+}
