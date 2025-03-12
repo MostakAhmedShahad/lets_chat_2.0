@@ -13,7 +13,7 @@ part 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  StreamSubscription? _messagesSubscription;
+  StreamSubscription? _messagesSubscription; // Store the subscription
 
   ChatBloc() : super(ChatInitial()) {
     on<SendMessage>(_onSendMessage);
@@ -33,49 +33,36 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatError('Failed to send message: $e'));
     }
   }
-   void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
+
+  void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
     try {
       final currentUserId = _auth.currentUser!.uid;
+      print('Current User ID: $currentUserId');
+      print('Receiver ID: ${event.receiverId}');
 
-      // Use a StreamSubscription to manage the real-time updates
+      // Cancel any existing subscription
       _messagesSubscription?.cancel();
-     _messagesSubscription = _firestore
+
+      // Listen for real-time updates
+      _messagesSubscription = _firestore
           .collection('messages')
           .where('senderId', whereIn: [currentUserId, event.receiverId])
           .where('receiverId', whereIn: [currentUserId, event.receiverId])
           .orderBy('timestamp', descending: false)
           .snapshots()
           .listen((snapshot) {
-        final messages = snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
-        emit(MessagesLoaded(messages: messages));
-      });
- 
+            final messages = snapshot.docs
+                .map((doc) => Message.fromMap(doc.data()))
+                .toList();
+            if (!emit.isDone) {
+              emit(MessagesLoaded(messages: messages));
+            }
+          });
     } catch (e) {
       emit(ChatError('Failed to load messages: $e'));
     }
   }
-
-  // void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
-  //   emit(ChatLoading());
-  //   try {
-  //     final currentUserId = _auth.currentUser!.uid;
-
-  //     // Listen for real-time updates
-  //     _firestore
-  //         .collection('messages')
-  //         .where('senderId', whereIn: [currentUserId, event.receiverId])
-  //         .where('receiverId', whereIn: [currentUserId, event.receiverId])
-  //         .orderBy('timestamp', descending: false)
-  //         .snapshots()
-  //         .listen((snapshot) {
-  //       final messages = snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
-  //       emit(MessagesLoaded(messages: messages));
-  //     });
-  //   } catch (e) {
-  //     emit(ChatError('Failed to load messages: $e'));
-  //   }
-  // }
 
   void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
@@ -85,10 +72,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           .where('email', isEqualTo: event.email)
           .get();
 
-      final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+      final users =
+          snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
       emit(UsersLoaded(users: users));
     } catch (e) {
       emit(ChatError('Failed to search users: $e'));
     }
+  }
+
+  @override
+  Future<void> close() {
+    _messagesSubscription
+        ?.cancel(); // Cancel the subscription when the bloc is closed
+    return super.close();
   }
 }

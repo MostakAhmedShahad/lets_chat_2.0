@@ -1,11 +1,10 @@
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lets_chat/widgets/message_bubble.dart';
 import '../bloc/chat_bloc/chat_bloc.dart';
 import '../models/message_model.dart';
-
+ 
 
 class ChatScreen extends StatelessWidget {
   final String receiverId;
@@ -27,6 +26,9 @@ class ChatScreen extends StatelessWidget {
               builder: (context, state) {
                 if (state is MessagesLoaded) {
                   final messages = state.messages;
+                  if (messages.isEmpty) {
+                    return Center(child: Text('No messages found'));
+                  }
                   return ListView.builder(
                     reverse: false, // Oldest at the top, newest at the bottom
                     itemCount: messages.length,
