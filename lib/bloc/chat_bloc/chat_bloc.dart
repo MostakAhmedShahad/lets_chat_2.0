@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -10,6 +12,8 @@ part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  StreamSubscription? _messagesSubscription;
 
   ChatBloc() : super(ChatInitial()) {
     on<SendMessage>(_onSendMessage);
@@ -20,7 +24,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   void _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     try {
       await _firestore.collection('messages').add({
-        'senderId': FirebaseAuth.instance.currentUser!.uid,
+        'senderId': _auth.currentUser!.uid,
         'receiverId': event.receiverId,
         'message': event.message,
         'timestamp': DateTime.now(),
@@ -29,26 +33,49 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatError('Failed to send message: $e'));
     }
   }
-
-  void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
+   void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
     try {
-      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final currentUserId = _auth.currentUser!.uid;
 
-      // Fetch messages where the current user is either the sender or receiver
-      final messages = await _firestore
+      // Use a StreamSubscription to manage the real-time updates
+      _messagesSubscription?.cancel();
+     _messagesSubscription = _firestore
           .collection('messages')
-          .where('senderId', isEqualTo: currentUserId)
-          .where('receiverId', isEqualTo: event.receiverId)
-          .orderBy('timestamp', descending: true)
-          .get();
-
-      final messageList = messages.docs.map((doc) => Message.fromMap(doc.data())).toList();
-      emit(MessagesLoaded(messages: messageList));
+          .where('senderId', whereIn: [currentUserId, event.receiverId])
+          .where('receiverId', whereIn: [currentUserId, event.receiverId])
+          .orderBy('timestamp', descending: false)
+          .snapshots()
+          .listen((snapshot) {
+        final messages = snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+        emit(MessagesLoaded(messages: messages));
+      });
+ 
     } catch (e) {
       emit(ChatError('Failed to load messages: $e'));
     }
   }
+
+  // void _onLoadMessages(LoadMessages event, Emitter<ChatState> emit) async {
+  //   emit(ChatLoading());
+  //   try {
+  //     final currentUserId = _auth.currentUser!.uid;
+
+  //     // Listen for real-time updates
+  //     _firestore
+  //         .collection('messages')
+  //         .where('senderId', whereIn: [currentUserId, event.receiverId])
+  //         .where('receiverId', whereIn: [currentUserId, event.receiverId])
+  //         .orderBy('timestamp', descending: false)
+  //         .snapshots()
+  //         .listen((snapshot) {
+  //       final messages = snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+  //       emit(MessagesLoaded(messages: messages));
+  //     });
+  //   } catch (e) {
+  //     emit(ChatError('Failed to load messages: $e'));
+  //   }
+  // }
 
   void _onSearchUsers(SearchUsers event, Emitter<ChatState> emit) async {
     emit(ChatLoading());
