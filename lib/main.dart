@@ -9,13 +9,13 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: FirebaseOptions(
-      apiKey: "AIzaSyD3QYhCfBogKt_pnssg65cJ1lrXnQlwhzg", // Replace with your API key
-      authDomain: "lets-chat-65327.firebaseapp.com", // Replace with your auth domain
-      projectId: "lets-chat-65327", // Replace with your project ID
-      storageBucket: "lets-chat-65327.appspot.com", // Replace with your storage bucket
-      messagingSenderId: "965207828472", // Replace with your messaging sender ID
-      appId: "1:965207828472:web:5e31c842d8835bed51d80d", // Replace with your app ID
-      measurementId: "G-WECYHB6BMN", // Replace with your measurement ID
+      apiKey: "AIzaSyD3QYhCfBogKt_pnssg65cJ1lrXnQlwhzg", 
+      authDomain: "lets-chat-65327.firebaseapp.com", 
+      projectId: "lets-chat-65327",  
+      storageBucket: "lets-chat-65327.appspot.com",  
+      messagingSenderId: "965207828472", 
+      appId: "1:965207828472:web:5e31c842d8835bed51d80d", 
+      measurementId: "G-WECYHB6BMN",  
     ),
   );
   runApp(MyApp());
