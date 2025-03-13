@@ -47,6 +47,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(MessagesLoaded(messages: messageList));
     } catch (e) {
       emit(ChatError('Failed to load messages: $e'));
+      print(e);
     }
   }
 
