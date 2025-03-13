@@ -26,6 +26,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         'message': event.message,
         'timestamp': DateTime.now(),
       });
+       //emit(MessageSent());
+        add(LoadMessages(event.receiverId));
     } catch (e) {
       emit(ChatError('Failed to send message: $e'));
     }

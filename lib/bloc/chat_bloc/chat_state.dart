@@ -37,6 +37,7 @@ class ChatError extends ChatState {
   @override
   List<Object> get props => [error];
 }
+ 
 // part of 'chat_bloc.dart';
 
 // abstract class ChatState extends Equatable {

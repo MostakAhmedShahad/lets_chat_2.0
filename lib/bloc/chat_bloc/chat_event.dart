@@ -34,6 +34,8 @@ class SearchUsers extends ChatEvent {
   @override
   List<Object> get props => [email];
 }
+
+class MessageSent extends ChatEvent {}
 // part of 'chat_bloc.dart';
 
 // abstract class ChatEvent extends Equatable {
