@@ -22,7 +22,7 @@ class ChatRepository {
         .collection('messages')
         .where('senderId', whereIn: [userId, otherUserId])
         .where('receiverId', whereIn: [userId, otherUserId])
-        .orderBy('timestamp', descending: false)
+        .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
           if (snapshot.docs.isEmpty) {

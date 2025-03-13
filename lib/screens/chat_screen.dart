@@ -6,25 +6,44 @@ import '../bloc/chat_bloc/chat_bloc.dart';
 import '../models/message_model.dart';
 import '../widgets/message_bubble.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   final String receiverId;
-  final _messageController = TextEditingController();
 
   ChatScreen({required this.receiverId});
 
   @override
+  _ChatScreenState createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  final _messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch messages when the screen is opened
+    context.read<ChatBloc>().add(LoadMessages(widget.receiverId));
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-
-    // Fetch messages when the screen is opened
-    context.read<ChatBloc>().add(LoadMessages(receiverId));
 
     return Scaffold(
       appBar: AppBar(
         title: FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance
               .collection('users')
-              .doc(receiverId)
+              .doc(widget.receiverId)
               .get(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
@@ -41,7 +60,7 @@ class ChatScreen extends StatelessWidget {
                 children: [
                   Text('Chat with ${userData['email']}'),
                   Text(
-                    'User ID: $receiverId',
+                    'User ID: ${widget.receiverId}',
                     style: TextStyle(fontSize: 12),
                   ),
                 ],
@@ -57,8 +76,10 @@ class ChatScreen extends StatelessWidget {
               builder: (context, state) {
                 if (state is MessagesLoaded) {
                   final messages = state.messages;
+                  // Scroll to the bottom when new messages are loaded
+                  _scrollToBottom();
                   return ListView.builder(
-                    reverse: true, // Show latest messages at the bottom
+                    controller: _scrollController, // Add ScrollController
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[index];
@@ -94,7 +115,7 @@ class ChatScreen extends StatelessWidget {
                     final message = _messageController.text.trim();
                     if (message.isNotEmpty) {
                       context.read<ChatBloc>().add(SendMessage(
-                            receiverId,
+                            widget.receiverId,
                             message,
                           ));
                       _messageController.clear();
