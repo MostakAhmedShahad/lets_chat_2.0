@@ -9,9 +9,10 @@ abstract class ChatEvent extends Equatable {
 
 class SendMessage extends ChatEvent {
   final String receiverId;
+  //final String senderId;
   final String message;
 
-  const SendMessage(this.receiverId, this.message);
+  const SendMessage(this.receiverId, this.message );
 
   @override
   List<Object> get props => [receiverId, message];
@@ -19,6 +20,8 @@ class SendMessage extends ChatEvent {
 
 class LoadMessages extends ChatEvent {
   final String receiverId;
+  //final String senderId;
+
 
   const LoadMessages(this.receiverId);
 

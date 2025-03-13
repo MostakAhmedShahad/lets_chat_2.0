@@ -1,6 +1,3 @@
-
-
-
 import 'package:flutter/material.dart';
 import '../models/message_model.dart';
 
@@ -8,7 +5,10 @@ class MessageBubble extends StatelessWidget {
   final Message message;
   final bool isMe;
 
-  MessageBubble({required this.message, required this.isMe});
+  const MessageBubble({
+    required this.message,
+    required this.isMe,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -18,6 +18,8 @@ class ChatScreen extends StatelessWidget {
       appBar: AppBar(title: Text('Chat')),
       body: Column(
         children: [
+           
+            
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
               builder: (context, state) {
