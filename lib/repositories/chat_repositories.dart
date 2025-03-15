@@ -1,11 +1,12 @@
- import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message_model.dart';
 import '../models/user_model.dart';
 
 class ChatRepository {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> sendMessage(String senderId, String receiverId, String message) async {
+  Future<void> sendMessage(
+      String senderId, String receiverId, String message) async {
     await _firestore.collection('messages').add({
       'senderId': senderId,
       'receiverId': receiverId,
@@ -28,7 +29,9 @@ class ChatRepository {
           if (snapshot.docs.isEmpty) {
             print('No messages found.');
           }
-          return snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+          return snapshot.docs
+              .map((doc) => Message.fromMap(doc.data()))
+              .toList();
         });
   }
 
@@ -43,6 +46,36 @@ class ChatRepository {
     } catch (e) {
       print('Error searching users: $e');
       throw Exception('Failed to search users: $e');
+    }
+  }
+
+  Future<List<UserModel>> getUsersWithPreviousChats(String userId) async {
+    try {
+      // Fetch messages where the current user is either the sender or receiver
+      final messagesSnapshot = await _firestore
+          .collection('messages')
+          .where('senderId', isEqualTo: userId)
+          .get();
+
+      // Extract unique user IDs from the messages
+      final receiverIds = messagesSnapshot.docs
+          .map((doc) => doc['receiverId'] as String)
+          .toSet()
+          .toList();
+
+      // Fetch user details for the receiver IDs
+      final users = await Future.wait(
+        receiverIds.map((receiverId) async {
+          final userSnapshot =
+              await _firestore.collection('users').doc(receiverId).get();
+          return UserModel.fromMap(userSnapshot.data()!);
+        }),
+      );
+
+      return users;
+    } catch (e) {
+      print('Error fetching users with previous chats: $e');
+      throw Exception('Failed to fetch users with previous chats: $e');
     }
   }
 }

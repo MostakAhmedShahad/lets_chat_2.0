@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:lets_chat/models/message_model.dart';
 import 'package:lets_chat/models/user_model.dart';
+import 'package:lets_chat/repositories/chat_repositories.dart';
 
 
 part 'chat_event.dart';
@@ -11,11 +12,13 @@ part 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final ChatRepository _chatRepository;
 
-  ChatBloc() : super(ChatInitial()) {
+  ChatBloc(this._chatRepository) : super(ChatInitial()) {
     on<SendMessage>(_onSendMessage);
     on<LoadMessages>(_onLoadMessages);
     on<SearchUsers>(_onSearchUsers);
+    on<LoadUsersWithPreviousChats>(_onLoadUsersWithPreviousChats);
   }
 
   void _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
@@ -68,6 +71,18 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
       emit(ChatError('Failed to search users: $e'));
     }
   }
+
+  void _onLoadUsersWithPreviousChats(
+    LoadUsersWithPreviousChats event, Emitter<ChatState> emit) async {
+  emit(ChatLoading());
+  try {
+    final users = await _chatRepository.getUsersWithPreviousChats(event.userId);
+    emit(UsersWithPreviousChatsLoaded(users: users));
+  } catch (e) {
+    emit(ChatError('Failed to load users with previous chats: $e'));
+  }
+}
+
 }
 // import 'package:firebase_auth/firebase_auth.dart';
 
