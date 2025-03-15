@@ -13,7 +13,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   AuthBloc() : super(AuthInitial()) {
     on<SignUpRequested>(_onSignUpRequested);
     on<LoginRequested>(_onLoginRequested);
-    on<LogoutRequested>(_onLogoutRequested);
+    on<LogoutRequested>(_onLogoutRequested); //inbox
   }
 
    void _onSignUpRequested(SignUpRequested event, Emitter<AuthState> emit) async {

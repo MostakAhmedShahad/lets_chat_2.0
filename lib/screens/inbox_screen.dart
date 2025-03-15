@@ -7,6 +7,7 @@ import 'chat_screen.dart';
 
 class InboxScreen extends StatefulWidget {
   @override
+  
   _InboxScreenState createState() => _InboxScreenState();
 }
 

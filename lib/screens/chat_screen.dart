@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lets_chat/screens/inbox_screen.dart';
 import '../bloc/chat_bloc/chat_bloc.dart';
 import '../models/message_model.dart';
 import '../widgets/message_bubble.dart';
@@ -40,6 +41,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            //Navigator.pop(context); // Navigate back to InboxScreen
+            Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => InboxScreen()),
+          );
+          },
+        ),
         title: FutureBuilder<DocumentSnapshot>(
           future: FirebaseFirestore.instance
               .collection('users')
@@ -124,6 +135,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ],
             ),
+          ),
+          FloatingActionButton(
+            onPressed: () {
+              Navigator.pop(context); // Navigate back to InboxScreen
+            },
+            child: Icon(Icons.arrow_back),
           ),
         ],
       ),
