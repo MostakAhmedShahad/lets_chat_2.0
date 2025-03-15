@@ -5,16 +5,24 @@ import '../bloc/chat_bloc/chat_bloc.dart';
 import '../models/user_model.dart';
 import 'chat_screen.dart';
 
-class InboxScreen extends StatelessWidget {
+class InboxScreen extends StatefulWidget {
+  @override
+  _InboxScreenState createState() => _InboxScreenState();
+}
+
+class _InboxScreenState extends State<InboxScreen> {
   final _searchController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-
+  void initState() {
+    super.initState();
     // Fetch users with previous chats when the screen is opened
+    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
     context.read<ChatBloc>().add(LoadUsersWithPreviousChats(currentUserId));
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Inbox')),
       body: Column(
