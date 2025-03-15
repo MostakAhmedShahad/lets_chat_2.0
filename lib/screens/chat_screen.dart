@@ -90,6 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   // Scroll to the bottom when new messages are loaded
                   _scrollToBottom();
                   return ListView.builder(
+                    reverse: true,
                     controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
@@ -136,12 +137,7 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
           ),
-          FloatingActionButton(
-            onPressed: () {
-              Navigator.pop(context); // Navigate back to InboxScreen
-            },
-            child: Icon(Icons.arrow_back),
-          ),
+           
         ],
       ),
     );
