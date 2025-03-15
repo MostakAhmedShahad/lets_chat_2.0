@@ -93,38 +93,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   );
                 } else if (state is ChatError) {
                   return Center(child: Text(state.error));
-                } else if (state is MessageSent) {
-                  // Rebuild the UI when a message is sent
-                  return BlocBuilder<ChatBloc, ChatState>(
-                    builder: (context, state) {
-                      if (state is MessagesLoaded) {
-                        final messages = state.messages;
-                        _scrollToBottom();
-                        return ListView.builder(
-                          controller: _scrollController,
-                          itemCount: messages.length,
-                          itemBuilder: (context, index) {
-                            final message = messages[index];
-                            final isMe = message.senderId == currentUserId;
-
-                            return MessageBubble(
-                              message: message,
-                              isMe: isMe,
-                            );
-                          },
-                        );
-                      } else {
-                        return Center(child: CircularProgressIndicator());
-                      }
-                    },
-                  );
                 } else {
                   return Center(child: CircularProgressIndicator());
                 }
               },
             ),
           ),
-           
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
@@ -156,4 +130,3 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
- 

@@ -66,7 +66,10 @@ class _InboxScreenState extends State<InboxScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChatScreen(receiverId: user.uid),
+                              builder: (context) => BlocProvider.value(
+                                value: context.read<ChatBloc>(),
+                                child: ChatScreen(receiverId: user.uid),
+                            ),
                             ),
                           );
                         },
