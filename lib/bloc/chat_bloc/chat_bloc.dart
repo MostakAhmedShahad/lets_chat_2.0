@@ -97,7 +97,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final users = await _chatRepository.getUsersWithPreviousChats(event.userId);
 
     // ✅ Ensure latest user appears on top
-    users.sort((a, b) {
+    users.sort((b, a) {
       if (a.lastMessageTimestamp == null && b.lastMessageTimestamp == null) {
         return 0;
       } else if (a.lastMessageTimestamp == null) {
