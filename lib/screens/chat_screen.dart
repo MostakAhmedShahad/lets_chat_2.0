@@ -1,11 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lets_chat/bloc/chat_bloc/chat_bloc.dart';
 import 'package:lets_chat/screens/inbox_screen.dart';
-import '../bloc/chat_bloc/chat_bloc.dart';
-import '../models/message_model.dart';
-import '../widgets/message_bubble.dart';
 
 class ChatScreen extends StatefulWidget {
   final String receiverId;
@@ -23,10 +21,8 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-
     final chatBloc = context.read<ChatBloc>();
 
-    // ✅ Prevent multiple calls to LoadMessages
     if (chatBloc.state is! ChatLoading) {
       chatBloc.add(LoadMessages(widget.receiverId));
     }
@@ -47,9 +43,8 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
-            //Navigator.pop(context); // Navigate back to InboxScreen
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => InboxScreen()),
@@ -63,90 +58,149 @@ class _ChatScreenState extends State<ChatScreen> {
               .get(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Text('Loading...');
+              return Text('Loading...', style: TextStyle(color: Colors.white));
             } else if (snapshot.hasError) {
-              return Text('Error loading user details');
+              return Text('Error loading user', style: TextStyle(color: Colors.white));
             } else if (!snapshot.hasData || !snapshot.data!.exists) {
-              return Text('User not found');
+              return Text('User not found', style: TextStyle(color: Colors.white));
             } else {
               final userData = snapshot.data!.data() as Map<String, dynamic>;
-              final userEmail = userData['email'] ?? 'No email';
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              return Row(
                 children: [
-                  Text('Chat with ${userData['email']}'),
-                  Text(
-                    'User ID: ${widget.receiverId}',
-                    style: TextStyle(fontSize: 12),
+                  CircleAvatar(
+                    backgroundColor: Colors.deepPurple,
+                    child: Icon(Icons.person, color: Colors.white),
                   ),
+                  SizedBox(width: 12),
+                  Text(userData['email'] ?? 'No email'),
                 ],
               );
             }
           },
         ),
+        backgroundColor: Colors.deepPurple,
+        elevation: 5,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: BlocBuilder<ChatBloc, ChatState>(
-              buildWhen: (previous, current) {
-                // ✅ Only rebuild when messages are loaded or an error occurs
-                return current is MessagesLoaded || current is ChatError;
-              },
-              builder: (context, state) {
-                if (state is MessagesLoaded) {
-                  final messages = state.messages;
-                  // Scroll to the bottom when new messages are loaded
-                  _scrollToBottom();
-                  return ListView.builder(
-                    controller: _scrollController,
-                    itemCount: messages.length,
-                    itemBuilder: (context, index) {
-                      final message = messages[index];
-                      final isMe = message.senderId == currentUserId;
+      body: Center(
+        child: Container(
+          width: 600, // Web-friendly width
+          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Column(
+            children: [
+              Expanded(
+                child: BlocBuilder<ChatBloc, ChatState>(
+                  buildWhen: (previous, current) {
+                    return current is MessagesLoaded || current is ChatError;
+                  },
+                  builder: (context, state) {
+                    if (state is MessagesLoaded) {
+                      final messages = state.messages;
+                      _scrollToBottom();
+                      return ScrollConfiguration(
+                        behavior: NoScrollBehavior(),
+                        child: ListView.builder(
+                          controller: _scrollController,
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) {
+                            final message = messages[index];
+                            final isMe = message.senderId == currentUserId;
 
-                      return MessageBubble(
-                        message: message,
-                        isMe: isMe,
+                            return Align(
+                              alignment:
+                                  isMe ? Alignment.centerRight : Alignment.centerLeft,
+                              child: Container(
+                                margin: EdgeInsets.symmetric(vertical: 6),
+                                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: isMe
+                                      ? Colors.deepPurple.withOpacity(0.9)
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  message.message,
+                                  style: TextStyle(
+                                    color: isMe ? Colors.white : Colors.black,
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       );
-                    },
-                  );
-                } else if (state is ChatError) {
-                  return Center(child: Text(state.error));
-                } else {
-                  return Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _messageController,
-                    decoration: InputDecoration(labelText: 'Type a message'),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    final message = _messageController.text.trim();
-                    if (message.isNotEmpty) {
-                      context.read<ChatBloc>().add(SendMessage(
-                            widget.receiverId,
-                            message,
-                          ));
-                      _messageController.clear();
+                    } else if (state is ChatError) {
+                      return Center(
+                        child: Text(state.error, style: TextStyle(color: Colors.red)),
+                      );
+                    } else {
+                      return Center(child: CircularProgressIndicator());
                     }
                   },
                 ),
-              ],
-            ),
+              ),
+
+              // Message Input Box
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.shade300, width: 1),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: InputDecoration(
+                          hintText: 'Type a message...',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide(color: Colors.deepPurple),
+                          ),
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    FloatingActionButton(
+                      backgroundColor: Colors.deepPurple,
+                      onPressed: () {
+                        final message = _messageController.text.trim();
+                        if (message.isNotEmpty) {
+                          context.read<ChatBloc>().add(SendMessage(
+                                widget.receiverId,
+                                message,
+                              ));
+                          _messageController.clear();
+                        }
+                      },
+                      child: Icon(Icons.send, color: Colors.white),
+                      mini: true,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
+  }
+}
+
+class NoScrollBehavior extends ScrollBehavior {
+  @override
+  Widget buildScrollbar(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child; // Removes the scroll bar
+  }
+
+  @override
+  Widget buildOverscrollIndicator(
+      BuildContext context, Widget child, ScrollableDetails details) {
+    return child; // Removes the overscroll indicator
   }
 }

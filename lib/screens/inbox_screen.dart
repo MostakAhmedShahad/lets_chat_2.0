@@ -49,7 +49,7 @@ class _InboxScreenState extends State<InboxScreen> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withOpacity(0),
                       blurRadius: 10,
                       spreadRadius: 2,
                     ),

@@ -22,7 +22,7 @@ class LoginScreen extends StatelessWidget {
         }
       },
       child: Scaffold(
-        appBar: AppBar(title: Text('Login')),
+         
         body: Center(
           child: Container(
             padding: EdgeInsets.all(24),
