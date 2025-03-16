@@ -6,7 +6,6 @@ import 'package:lets_chat/models/message_model.dart';
 import 'package:lets_chat/models/user_model.dart';
 import 'package:lets_chat/repositories/chat_repositories.dart';
 
-
 part 'chat_event.dart';
 part 'chat_state.dart';
 
@@ -23,14 +22,27 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   void _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     try {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      final timestamp = DateTime.now();
       await _firestore.collection('messages').add({
         'senderId': FirebaseAuth.instance.currentUser!.uid,
         'receiverId': event.receiverId,
         'message': event.message,
         'timestamp': DateTime.now(),
       });
-       //emit(MessageSent());
-        add(LoadMessages(event.receiverId));
+
+      // ✅ Update last message timestamp for both users
+      await _firestore.collection('users').doc(currentUserId).update({
+        'lastMessageTimestamp': timestamp,
+      });
+
+      await _firestore.collection('users').doc(event.receiverId).update({
+        'lastMessageTimestamp': timestamp,
+      });
+
+      // ✅ Reload messages and inbox
+      add(LoadUsersWithPreviousChats(currentUserId));
+      add(LoadMessages(event.receiverId));
     } catch (e) {
       emit(ChatError('Failed to send message: $e'));
     }
@@ -49,7 +61,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           .orderBy('timestamp', descending: false)
           .get();
 
-      final messageList = messages.docs.map((doc) => Message.fromMap(doc.data())).toList();
+      final messageList =
+          messages.docs.map((doc) => Message.fromMap(doc.data())).toList();
       emit(MessagesLoaded(messages: messageList));
     } catch (e) {
       emit(ChatError('Failed to load messages: $e'));
@@ -65,7 +78,8 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
           .where('email', isEqualTo: event.email)
           .get();
 
-      final users = snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
+      final users =
+          snapshot.docs.map((doc) => UserModel.fromMap(doc.data())).toList();
       emit(UsersLoaded(users: users));
     } catch (e) {
       emit(ChatError('Failed to search users: $e'));
@@ -73,17 +87,30 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   }
 
   void _onLoadUsersWithPreviousChats(
-    LoadUsersWithPreviousChats event, Emitter<ChatState> emit) async {
-  emit(ChatLoading());
-  try {
-    final users = await _chatRepository.getUsersWithPreviousChats(event.userId);
-    emit(UsersWithPreviousChatsLoaded(users: users));
-  } catch (e) {
-    emit(ChatError('Failed to load users with previous chats: $e'));
-  }
-}
- 
+      LoadUsersWithPreviousChats event, Emitter<ChatState> emit) async {
+    emit(ChatLoading());
+    try {
+      final users =
+          await _chatRepository.getUsersWithPreviousChats(event.userId);
 
+      // ✅ Sort users by lastMessageTimestamp (latest first)
+      users.sort((a, b) {
+        if (a.lastMessageTimestamp == null && b.lastMessageTimestamp == null) {
+          return 0;
+        } else if (a.lastMessageTimestamp == null) {
+          return 1;
+        } else if (b.lastMessageTimestamp == null) {
+          return -1;
+        } else {
+          return b.lastMessageTimestamp!.compareTo(a.lastMessageTimestamp!);
+        }
+      });
+
+      emit(UsersWithPreviousChatsLoaded(users: users));
+    } catch (e) {
+      emit(ChatError('Failed to load users with previous chats: $e'));
+    }
+  }
 }
 // import 'package:firebase_auth/firebase_auth.dart';
 
