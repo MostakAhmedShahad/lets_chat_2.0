@@ -17,9 +17,12 @@ class _InboxScreenState extends State<InboxScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch users with previous chats when the screen is opened
-    final currentUserId = FirebaseAuth.instance.currentUser!.uid;
-    context.read<ChatBloc>().add(LoadUsersWithPreviousChats(currentUserId));
+    // Fetch users with previous chats only if not already fetched
+    final chatBloc = context.read<ChatBloc>();
+    if (chatBloc.state is! UsersWithPreviousChatsLoaded) {
+      final currentUserId = FirebaseAuth.instance.currentUser!.uid;
+      chatBloc.add(LoadUsersWithPreviousChats(currentUserId));
+    }
   }
 
   @override
@@ -103,7 +106,8 @@ class _InboxScreenState extends State<InboxScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ChatScreen(receiverId: user.uid),
+                              builder: (context) =>
+                                  ChatScreen(receiverId: user.uid),
                             ),
                           );
                         },
@@ -115,7 +119,9 @@ class _InboxScreenState extends State<InboxScreen> {
                 } else if (state is ChatLoading) {
                   return Center(child: CircularProgressIndicator());
                 } else {
-                  return Center(child: Text('Search for users by email or view previous chats'));
+                  return Center(
+                      child: Text(
+                          'Search for users by email or view previous chats'));
                 }
               },
             ),

@@ -23,8 +23,13 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch messages when the screen is opened
-    context.read<ChatBloc>().add(LoadMessages(widget.receiverId));
+
+    final chatBloc = context.read<ChatBloc>();
+
+    // ✅ Prevent multiple calls to LoadMessages
+    if (chatBloc.state is! ChatLoading) {
+      chatBloc.add(LoadMessages(widget.receiverId));
+    }
   }
 
   void _scrollToBottom() {
@@ -46,9 +51,9 @@ class _ChatScreenState extends State<ChatScreen> {
           onPressed: () {
             //Navigator.pop(context); // Navigate back to InboxScreen
             Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => InboxScreen()),
-          );
+              context,
+              MaterialPageRoute(builder: (context) => InboxScreen()),
+            );
           },
         ),
         title: FutureBuilder<DocumentSnapshot>(
@@ -84,13 +89,16 @@ class _ChatScreenState extends State<ChatScreen> {
         children: [
           Expanded(
             child: BlocBuilder<ChatBloc, ChatState>(
+              buildWhen: (previous, current) {
+                // ✅ Only rebuild when messages are loaded or an error occurs
+                return current is MessagesLoaded || current is ChatError;
+              },
               builder: (context, state) {
                 if (state is MessagesLoaded) {
                   final messages = state.messages;
                   // Scroll to the bottom when new messages are loaded
                   _scrollToBottom();
                   return ListView.builder(
-                   
                     controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
@@ -137,7 +145,6 @@ class _ChatScreenState extends State<ChatScreen> {
               ],
             ),
           ),
-           
         ],
       ),
     );

@@ -86,31 +86,35 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  void _onLoadUsersWithPreviousChats(
-      LoadUsersWithPreviousChats event, Emitter<ChatState> emit) async {
-    emit(ChatLoading());
-    try {
-      final users =
-          await _chatRepository.getUsersWithPreviousChats(event.userId);
+   void _onLoadUsersWithPreviousChats(
+    LoadUsersWithPreviousChats event, Emitter<ChatState> emit) async {
+  // ✅ Prevent multiple loaders by checking if state is already loading
+  if (state is ChatLoading) return;
 
-      // ✅ Sort users by lastMessageTimestamp (latest first)
-      users.sort((a, b) {
-        if (a.lastMessageTimestamp == null && b.lastMessageTimestamp == null) {
-          return 0;
-        } else if (a.lastMessageTimestamp == null) {
-          return 1;
-        } else if (b.lastMessageTimestamp == null) {
-          return -1;
-        } else {
-          return b.lastMessageTimestamp!.compareTo(a.lastMessageTimestamp!);
-        }
-      });
+  emit(ChatLoading());
 
-      emit(UsersWithPreviousChatsLoaded(users: users));
-    } catch (e) {
-      emit(ChatError('Failed to load users with previous chats: $e'));
-    }
+  try {
+    final users = await _chatRepository.getUsersWithPreviousChats(event.userId);
+
+    // ✅ Ensure latest user appears on top
+    users.sort((a, b) {
+      if (a.lastMessageTimestamp == null && b.lastMessageTimestamp == null) {
+        return 0;
+      } else if (a.lastMessageTimestamp == null) {
+        return 1;
+      } else if (b.lastMessageTimestamp == null) {
+        return -1;
+      } else {
+        return b.lastMessageTimestamp!.compareTo(a.lastMessageTimestamp!);
+      }
+    });
+
+    emit(UsersWithPreviousChatsLoaded(users: users));
+  } catch (e) {
+    emit(ChatError('Failed to load users: $e'));
   }
+}
+
 }
 // import 'package:firebase_auth/firebase_auth.dart';
 
