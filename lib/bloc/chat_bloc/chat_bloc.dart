@@ -82,6 +82,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(ChatError('Failed to load users with previous chats: $e'));
   }
 }
+ 
 
 }
 // import 'package:firebase_auth/firebase_auth.dart';

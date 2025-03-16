@@ -90,7 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   // Scroll to the bottom when new messages are loaded
                   _scrollToBottom();
                   return ListView.builder(
-                    reverse: true,
+                   
                     controller: _scrollController,
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
