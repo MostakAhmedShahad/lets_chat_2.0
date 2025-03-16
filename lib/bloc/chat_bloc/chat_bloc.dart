@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,26 +14,40 @@ part 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final ChatRepository _chatRepository;
+  StreamSubscription<QuerySnapshot>? _messagesSubscription;
 
   ChatBloc(this._chatRepository) : super(ChatInitial()) {
     on<SendMessage>(_onSendMessage);
     on<LoadMessages>(_onLoadMessages);
     on<SearchUsers>(_onSearchUsers);
     on<LoadUsersWithPreviousChats>(_onLoadUsersWithPreviousChats);
+    on<MessagesUpdated>(_onMessagesUpdated);
+  }
+
+  @override
+  Future<void> close() {
+    _messagesSubscription?.cancel(); // Dispose of the listener
+    return super.close();
+  }
+
+  void _onMessagesUpdated(MessagesUpdated event, Emitter<ChatState> emit) {
+    emit(MessagesLoaded(messages: event.messages));
   }
 
   void _onSendMessage(SendMessage event, Emitter<ChatState> emit) async {
     try {
       final currentUserId = FirebaseAuth.instance.currentUser!.uid;
       final timestamp = DateTime.now();
+
+      // Add message to Firestore
       await _firestore.collection('messages').add({
-        'senderId': FirebaseAuth.instance.currentUser!.uid,
+        'senderId': currentUserId,
         'receiverId': event.receiverId,
         'message': event.message,
-        'timestamp': DateTime.now(),
+        'timestamp': timestamp,
       });
 
-      // ✅ Update last message timestamp for both users
+      // Update last message timestamp for both users
       await _firestore.collection('users').doc(currentUserId).update({
         'lastMessageTimestamp': timestamp,
       });
@@ -40,7 +56,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         'lastMessageTimestamp': timestamp,
       });
 
-      // ✅ Reload messages and inbox
+      // Reload messages and inbox
       add(LoadUsersWithPreviousChats(currentUserId));
       add(LoadMessages(event.receiverId));
     } catch (e) {
@@ -53,22 +69,20 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     try {
       final currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
-      // Listen for real-time changes in the messages collection
-      FirebaseFirestore.instance
+      // Listen for real-time updates in the messages collection
+      _messagesSubscription = _firestore
           .collection('messages')
           .where('senderId', whereIn: [currentUserId, event.receiverId])
           .where('receiverId', whereIn: [currentUserId, event.receiverId])
           .orderBy('timestamp', descending: false)
           .snapshots()
           .listen((snapshot) {
-            final messageList = snapshot.docs
-                .map((doc) => Message.fromMap(doc.data()))
-                .toList();
-            emit(MessagesLoaded(messages: messageList)); // Emit new messages
-          });
+        final messageList =
+            snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+        add(MessagesUpdated(messageList)); // Emit updated messages
+      });
     } catch (e) {
       emit(ChatError('Failed to load messages: $e'));
-      print(e);
     }
   }
 
@@ -90,16 +104,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
   void _onLoadUsersWithPreviousChats(
       LoadUsersWithPreviousChats event, Emitter<ChatState> emit) async {
-    // ✅ Prevent multiple loaders by checking if state is already loading
-    if (state is ChatLoading) return;
-
+    if (state is ChatLoading) return; // Prevent multiple loaders
     emit(ChatLoading());
 
     try {
-      final users =
-          await _chatRepository.getUsersWithPreviousChats(event.userId);
+      final users = await _chatRepository.getUsersWithPreviousChats(event.userId);
 
-      // ✅ Ensure latest user appears on top
+      // Sort users by last message timestamp
       users.sort((b, a) {
         if (a.lastMessageTimestamp == null && b.lastMessageTimestamp == null) {
           return 0;

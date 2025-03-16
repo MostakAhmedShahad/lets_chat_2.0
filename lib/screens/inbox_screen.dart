@@ -12,7 +12,7 @@ class InboxScreen extends StatefulWidget {
 
 class _InboxScreenState extends State<InboxScreen> {
   final _searchController = TextEditingController();
-  ScrollController _scrollController = ScrollController();
+  ScrollController _scrollController = ScrollController(); //chatscreen
 
   @override
   void initState() {

@@ -19,10 +19,34 @@ class LoginScreen extends StatelessWidget {
             context,
             MaterialPageRoute(builder: (context) => InboxScreen()),
           );
+        } else if (state is AuthenticationFailure) {
+          // Show snack bar on login failure
+          String message = '';
+          if (state.error is FirebaseAuthException) {
+            FirebaseAuthException error = state.error;
+            if (error.code == 'user-not-found') {
+              message = 'No user found with this email.';
+            } else if (error.code == 'wrong-password') {
+              message = 'Incorrect password.';
+            } else if (error.code == 'invalid-email') {
+              message = 'Invalid email format.';
+            } else {
+              message = 'Login failed. Please try again.';
+            }
+          } else {
+            message = 'An error occurred. Please try again.';
+          }
+
+          // Show the snack bar
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: Colors.red,
+            ),
+          );
         }
       },
       child: Scaffold(
-         
         body: Center(
           child: Container(
             padding: EdgeInsets.all(24),

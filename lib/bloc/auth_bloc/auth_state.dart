@@ -23,3 +23,12 @@ class AuthError extends AuthState {
   @override
   List<Object> get props => [error];
 }
+
+class AuthenticationFailure extends AuthState {
+  final FirebaseAuthException error;
+
+  AuthenticationFailure(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

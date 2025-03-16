@@ -45,3 +45,11 @@ class MessageSent extends ChatEvent {}
   @override
   List<Object> get props => [userId];
 }
+class MessagesUpdated extends ChatEvent {
+  final List<Message> messages;
+
+  const MessagesUpdated(this.messages);
+
+  @override
+  List<Object> get props => [messages];
+}

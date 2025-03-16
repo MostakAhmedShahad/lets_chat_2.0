@@ -1,37 +1,63 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lets_chat/bloc/chat_bloc/chat_bloc.dart';
+import 'package:lets_chat/models/message_model.dart';
 import 'package:lets_chat/screens/inbox_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String receiverId;
 
-  ChatScreen({required this.receiverId});
+  const ChatScreen({required this.receiverId});
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  final _messageController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  StreamSubscription<QuerySnapshot>? _messagesSubscription;
 
   @override
   void initState() {
     super.initState();
+    // Start listening for messages
     final chatBloc = context.read<ChatBloc>();
+    chatBloc.add(LoadMessages(widget.receiverId));
 
-    if (chatBloc.state is! ChatLoading) {
-      chatBloc.add(LoadMessages(widget.receiverId));
-    }
+    // Listen for real-time updates
+    _messagesSubscription = FirebaseFirestore.instance
+        .collection('messages')
+        .where('senderId', whereIn: [FirebaseAuth.instance.currentUser!.uid, widget.receiverId])
+        .where('receiverId', whereIn: [FirebaseAuth.instance.currentUser!.uid, widget.receiverId])
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .listen((snapshot) {
+      final messages = snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+      chatBloc.add(MessagesUpdated(messages)); // Add a new event to update the state
+    });
+  }
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _scrollController.dispose();
+    _messagesSubscription?.cancel(); // Dispose of the listener
+    super.dispose();
   }
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.animateTo(
+          _scrollController.position.maxScrollExtent,
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }

@@ -8,15 +8,16 @@ part 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   AuthBloc() : super(AuthInitial()) {
     on<SignUpRequested>(_onSignUpRequested);
     on<LoginRequested>(_onLoginRequested);
-    on<LogoutRequested>(_onLogoutRequested); //inbox
+    on<LogoutRequested>(_onLogoutRequested); 
   }
 
-   void _onSignUpRequested(SignUpRequested event, Emitter<AuthState> emit) async {
+  // Handle SignUp event
+  void _onSignUpRequested(SignUpRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       // Create user in Firebase Authentication
@@ -39,7 +40,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-    void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
+  // Handle Login event
+  void _onLoginRequested(LoginRequested event, Emitter<AuthState> emit) async {
     emit(AuthLoading());
     try {
       await _auth.signInWithEmailAndPassword(
@@ -55,6 +57,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
+  // Handle Logout event
   void _onLogoutRequested(LogoutRequested event, Emitter<AuthState> emit) async {
     await _auth.signOut();
     emit(Unauthenticated());
