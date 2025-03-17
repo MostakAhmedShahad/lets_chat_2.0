@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lets_chat/bloc/auth_bloc/auth_bloc.dart';
+import 'package:lets_chat/screens/login_screen.dart'; // Import the LoginScreen
 import 'package:lets_chat/bloc/chat_bloc/chat_bloc.dart';
 import 'package:lets_chat/models/user_model.dart';
 import 'package:lets_chat/screens/chat_screen.dart';
@@ -12,7 +14,7 @@ class InboxScreen extends StatefulWidget {
 
 class _InboxScreenState extends State<InboxScreen> {
   final _searchController = TextEditingController();
-  ScrollController _scrollController = ScrollController(); //chatscreen
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -34,6 +36,38 @@ class _InboxScreenState extends State<InboxScreen> {
         ),
         centerTitle: true,
         elevation: 2,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text('Logout'),
+              onTap: () {
+                // Logout the user
+                context.read<AuthBloc>().add(LogoutRequested());
+                // Navigate to the LoginScreen
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: Center(
         child: Container(
