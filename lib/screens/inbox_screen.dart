@@ -43,7 +43,7 @@ class _InboxScreenState extends State<InboxScreen> {
           children: [
             DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.deepPurple,
+                color: Colors.green,
               ),
               child: Text(
                 'Menu',
@@ -95,7 +95,7 @@ class _InboxScreenState extends State<InboxScreen> {
                     hintText: 'Search by email',
                     border: InputBorder.none,
                     suffixIcon: IconButton(
-                      icon: Icon(Icons.search, color: Colors.deepPurple),
+                      icon: Icon(Icons.search, color: Colors.green),
                       onPressed: () {
                         final email = _searchController.text.trim();
                         if (email.isNotEmpty) {
@@ -151,15 +151,15 @@ class _InboxScreenState extends State<InboxScreen> {
                               padding: EdgeInsets.symmetric(
                                   vertical: 14, horizontal: 16),
                               decoration: BoxDecoration(
-                                color: Colors.deepPurple.withOpacity(0.1),
+                                color: Colors.green.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                    color: Colors.deepPurple, width: 0.5),
+                                    color: Colors.green, width: 0.5),
                               ),
                               child: Row(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: Colors.deepPurple,
+                                    backgroundColor: Colors.green,
                                     child: Icon(Icons.person, color: Colors.white),
                                   ),
                                   SizedBox(width: 12),

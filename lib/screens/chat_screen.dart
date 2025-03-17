@@ -95,7 +95,7 @@ class _ChatScreenState extends State<ChatScreen> {
               return Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: Colors.deepPurple,
+                    backgroundColor: Colors.green,
                     child: Icon(Icons.person, color: Colors.white),
                   ),
                   SizedBox(width: 12),
@@ -105,7 +105,7 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           },
         ),
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.green,
         elevation: 5,
       ),
       body: Center(
@@ -140,7 +140,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                                 decoration: BoxDecoration(
                                   color: isMe
-                                      ? Colors.deepPurple.withOpacity(0.9)
+                                      ? Colors.green.withOpacity(0.9)
                                       : Colors.grey[300],
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -184,7 +184,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           hintText: 'Type a message...',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide(color: Colors.deepPurple),
+                            borderSide: BorderSide(color: Colors.green),
                           ),
                           contentPadding:
                               EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -193,7 +193,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                     SizedBox(width: 10),
                     FloatingActionButton(
-                      backgroundColor: Colors.deepPurple,
+                      backgroundColor: Colors.green,
                       onPressed: () {
                         final message = _messageController.text.trim();
                         if (message.isNotEmpty) {

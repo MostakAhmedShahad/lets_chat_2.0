@@ -27,7 +27,7 @@ class SignupScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Sign Up'),
-          backgroundColor: Colors.deepPurple,
+          backgroundColor: Colors.green,
         ),
         body: Center(
           child: Container(
@@ -112,7 +112,7 @@ class SignupScreen extends StatelessWidget {
                     context.read<AuthBloc>().add(SignUpRequested(email, password));
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple, // Premium look
+                    backgroundColor: Colors.green, // Premium look
                     padding: EdgeInsets.symmetric(vertical: 14),
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
@@ -133,7 +133,7 @@ class SignupScreen extends StatelessWidget {
                   },
                   child: Text(
                     "Already have an account? Login",
-                    style: TextStyle(color: Colors.deepPurple, fontSize: 16),
+                    style: TextStyle(color: Colors.green, fontSize: 16),
                   ),
                 ),
               ],
