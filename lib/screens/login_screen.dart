@@ -122,7 +122,7 @@ class LoginScreen extends StatelessWidget {
                         .add(LoginRequested(email, password));
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple, // Premium look
+                    backgroundColor: Colors.green, // Premium look
                     padding: EdgeInsets.symmetric(vertical: 14),
                     minimumSize: Size(double.infinity, 50),
                     shape: RoundedRectangleBorder(
