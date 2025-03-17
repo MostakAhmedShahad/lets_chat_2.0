@@ -11,7 +11,7 @@ import 'package:lets_chat/screens/inbox_screen.dart';
 class ChatScreen extends StatefulWidget {
   final String receiverId;
 
-  const ChatScreen({required this.receiverId});
+  const ChatScreen({required this.receiverId}); //resizeToAvoidBottomInset
 
   @override
   _ChatScreenState createState() => _ChatScreenState();
@@ -67,6 +67,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
+      resizeToAvoidBottomInset: true, // Ensure the screen resizes when the keyboard appears
       appBar: AppBar(
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: Colors.white),
@@ -121,7 +122,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   builder: (context, state) {
                     if (state is MessagesLoaded) {
                       final messages = state.messages;
-                      _scrollToBottom();
+                      _scrollToBottom(); // Scroll to the bottom when new messages arrive
                       return ScrollConfiguration(
                         behavior: NoScrollBehavior(),
                         child: ListView.builder(
